@@ -4,15 +4,14 @@
     "description": "",
     "main": "src/build/index.js",
     "scripts": {
-        "build": "npm i && tsc --build --clean && tsc",
+        "build": "tsc --build --clean && tsc",
         "start:dev": "nodemon src/build/index.js",
         "start": "npm run build && node src/build/index.js"
     },
     "author": "Ann Mai, Elijah Smith",
     "devDependencies": {
         "dotenv": "^16.0.0",
-        "nodemon": "^2.0.15",
-        "socket.io-client": "^4.4.1"
+        "nodemon": "^2.0.15"
     },
     "dependencies": {
         "@types/bcryptjs": "^2.4.2",
