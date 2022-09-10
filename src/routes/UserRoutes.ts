@@ -1,14 +1,14 @@
-import { updateLanguageServiceSourceFile } from 'typescript';
+import { Types } from 'mongoose';
+import ConsumerTicket from '../models/ConsumerTicket';
+import ProducerTicket from '../models/ProducerTicket';
 import User from '../models/User';
 const router = require('express').Router();
-
-// Get all tickets belonging to a user
 
 // Registration route
 router.post('/register', async function registerRoute(req, res) {
     try {
         const user = new User(req.body, true);
-        user.save();
+        await user.save();
         res.status(201).send({ user });
     } catch (error) {
         console.log('Error 400 - register catch\n' + error);
@@ -73,10 +73,33 @@ router.delete('/delete/:userID', async function deleteRoute(req, res) {
             if (!user) {
                 return res.status(404).send({ error: 'User does not exist' });
             }
-            res.status(200).send({ user });
+            return res.status(200).send({ user });
         })
         .catch((error) => {
-            res.status(500).send(error);
+            return res.status(500).send(error);
+        });
+});
+
+router.get('/tickets/:userID', async function getTickets(req, res) {
+    User.findById(req.params.userID)
+        .then(async (user) => {
+            if (!user)
+                return res.status(404).send({ error: 'User does not exist' });
+
+            const consumerIDs = user.outstandingConsumerTickets;
+            const producerIDs = user.outstandingProducerTickets;
+
+            const consumerTickets = await ConsumerTicket.find({
+                _id: { $in: consumerIDs },
+            });
+            const producerTickets = await ProducerTicket.find({
+                _id: { $in: producerIDs },
+            });
+
+            return res.status(200).send({ consumerTickets, producerTickets });
+        })
+        .catch((err) => {
+            return res.status(404).send({ error: 'User does not exist' });
         });
 });
 
