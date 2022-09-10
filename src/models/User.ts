@@ -47,6 +47,7 @@ const userSchema = new Schema<IUser, UserModel>({
     },
     pronouns: {
         type: String,
+        default: 'Not Specified',
     },
     previousConnections: {
         type: [Types.ObjectId],
