@@ -9,10 +9,14 @@ app.use(cors());
 
 // Import routes
 import userRoutes from './routes/UserRoutes';
+import consumerRoutes from './routes/ConsumerRoutes';
+import producerRoutes from './routes/ProducerRoutes';
 
 // Middlewares
 app.use(express.json());
 app.use('/user', userRoutes);
+app.use('/consumer', consumerRoutes);
+app.use('/producer', producerRoutes);
 
 // Connect to DB
 import mongoose = require('mongoose');

@@ -2,6 +2,8 @@ import { updateLanguageServiceSourceFile } from 'typescript';
 import User from '../models/User';
 const router = require('express').Router();
 
+// Get all tickets belonging to a user
+
 // Registration route
 router.post('/register', async function registerRoute(req, res) {
     try {
