@@ -2,7 +2,7 @@ import { Model, Schema, model, Types } from 'mongoose';
 import validator from 'validator';
 import bcrypt = require('bcryptjs');
 
-interface IUser {
+export interface IUser {
     email: string;
     password: string;
     firstName: string;
