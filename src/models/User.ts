@@ -8,12 +8,12 @@ export interface IUser {
     firstName: string;
     lastName: string;
     pronouns: string;
-    previousConnections: string[];
+    previousConnections: string[]; // _id of User documents
     foodInterests: string[];
     dietaryRestrictions: string[];
-    acceptedTickets: string[];
-    outstandingConsumerTickets: string[];
-    outstandingProducerTickets: string[];
+    acceptedTickets: string[]; // _id of ProducerTicket documents
+    outstandingConsumerTickets: string[]; // _id of ConsumerTicket docs
+    outstandingProducerTickets: string[]; // _id of ProducerTicket docs
 }
 
 interface UserModel extends Model<IUser> {
