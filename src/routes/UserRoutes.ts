@@ -113,9 +113,7 @@ router.get('/accepted/:userID', async function getTickets(req, res) {
         _id: { $in: ticketIDs },
     });
 
-    return res
-        .status(200)
-        .send({ accepted: [...consumerTickets, ...producerTickets] });
+    return res.status(200).send({ consumerTickets, producerTickets });
 });
 
 async function getUserByID(id: string): Promise<IUser> {
