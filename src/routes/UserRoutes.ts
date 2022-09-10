@@ -2,10 +2,10 @@ import User from '../models/User';
 const router = require('express').Router();
 
 // Registration route
-router.post('/register', async (req, res) => {
+router.post('/register', async function registerRoute(req, res) {
     try {
         const user = new User(req.body, true);
-        await user.save();
+        user.save();
         res.status(201).send({ user });
     } catch (error) {
         console.log('Error 400 - register catch\n' + error);
@@ -14,7 +14,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Login Route
-router.post('/login', async (req, res) => {
+router.post('/login', async function loginRoute(req, res) {
     try {
         const { email, password } = req.body;
 

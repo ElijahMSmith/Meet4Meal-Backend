@@ -5,6 +5,14 @@ import bcrypt = require('bcryptjs');
 interface IUser {
     email: string;
     password: string;
+    firstName: string;
+    lastName: string;
+    pronouns: string;
+    previousConnections: string[];
+    foodInterests: string[];
+    dietaryRestrictions: string[];
+    acceptedTickets: string[];
+    outstandingTickets: string[];
 }
 
 interface UserModel extends Model<IUser> {
@@ -28,6 +36,32 @@ const userSchema = new Schema<IUser, UserModel>({
         type: String,
         required: true,
         minLength: 7,
+    },
+    firstName: {
+        type: String,
+        required: true,
+    },
+    lastName: {
+        type: String,
+        required: true,
+    },
+    pronouns: {
+        type: String,
+    },
+    previousConnections: {
+        type: [Types.ObjectId],
+    },
+    foodInterests: {
+        type: [String],
+    },
+    dietaryRestrictions: {
+        type: [String],
+    },
+    acceptedTickets: {
+        type: [Types.ObjectId],
+    },
+    outstandingTickets: {
+        type: [Types.ObjectId],
     },
 });
 
