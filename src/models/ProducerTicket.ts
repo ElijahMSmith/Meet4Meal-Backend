@@ -1,18 +1,21 @@
 import { Schema, model, Types } from 'mongoose';
 
 export interface IProducerTicket {
-    creator: Types.ObjectId;
-    creationDate: string;
-    location: string;
-    foodKind: string;
+    creator: string; // _id from MongoDB document
+    creationDate: string; // new Date().toISOString()
+    location: string; // zipcode
+    foodKind: string[]; // from constant list
     itemDescription: string;
-    serves: number;
+    serves: number; // > 0
     numberAccepted: number;
-    acceptedUsers: string[];
+    acceptedUsers: string[]; // list of _id for each user
 }
 
 const producerTicketSchema = new Schema<IProducerTicket>({
-    creator: Types.ObjectId,
+    creator: {
+        type: String,
+        required: true,
+    },
     creationDate: {
         type: String,
         required: true,
@@ -22,7 +25,7 @@ const producerTicketSchema = new Schema<IProducerTicket>({
         required: true,
     },
     foodKind: {
-        type: String,
+        type: [String],
         required: true,
     },
     itemDescription: {

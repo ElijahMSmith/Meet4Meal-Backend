@@ -1,16 +1,19 @@
 import { Schema, model, Types } from 'mongoose';
 
 export interface IConsumerTicket {
-    creator: Types.ObjectId;
-    creationDate: string;
-    location: string;
-    foodInterests: string[];
-    dietaryRestrictions: string[];
-    peopleSetting: string;
+    creator: string; // _id from MongoDB document
+    creationDate: string; // new Date().toISOString()
+    location: string; // zipcode
+    foodInterests: string[]; // from constant list
+    dietaryRestrictions: string[]; // from constant list
+    peopleSetting: string; // "group" or "individual"
 }
 
 const consumerTicketSchema = new Schema<IConsumerTicket>({
-    creator: Types.ObjectId,
+    creator: {
+        type: String,
+        required: true,
+    },
     creationDate: {
         type: String,
         required: true,
@@ -21,7 +24,10 @@ const consumerTicketSchema = new Schema<IConsumerTicket>({
     },
     foodInterests: [String],
     dietaryRestrictions: [String],
-    peopleSetting: String,
+    peopleSetting: {
+        type: String,
+        required: true,
+    },
 });
 
 const ConsumerTicket = model<IConsumerTicket>(
