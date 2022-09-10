@@ -6,7 +6,7 @@
     "scripts": {
         "build": "tsc --build --clean && tsc",
         "start:dev": "nodemon src/build/index.js",
-        "start": "node src/build/index.js"
+        "start": "npm run build && node src/build/index.js"
     },
     "author": "Ann Mai, Elijah Smith",
     "devDependencies": {
