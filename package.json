@@ -4,7 +4,7 @@
     "description": "",
     "main": "src/build/index.js",
     "scripts": {
-        "build": "tsc --build --clean && tsc",
+        "build": "npm i && tsc --build --clean && tsc",
         "start:dev": "nodemon src/build/index.js",
         "start": "node src/build/index.js"
     },
