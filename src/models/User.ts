@@ -12,7 +12,8 @@ export interface IUser {
     foodInterests: string[];
     dietaryRestrictions: string[];
     acceptedTickets: string[];
-    outstandingTickets: string[];
+    outstandingConsumerTickets: string[];
+    outstandingProducerTickets: string[];
 }
 
 interface UserModel extends Model<IUser> {
@@ -61,7 +62,10 @@ const userSchema = new Schema<IUser, UserModel>({
     acceptedTickets: {
         type: [Types.ObjectId],
     },
-    outstandingTickets: {
+    outstandingConsumerTickets: {
+        type: [Types.ObjectId],
+    },
+    outstandingProducerTickets: {
         type: [Types.ObjectId],
     },
 });

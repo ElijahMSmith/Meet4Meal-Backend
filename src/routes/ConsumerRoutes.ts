@@ -1,11 +1,5 @@
-/*
-
-Creating new consumer ticket and deleting ticket
-Return a list of tickets that match with a consumer request
-
-*/
-
 import ConsumerTicket from '../models/ConsumerTicket';
+import User from '../models/User';
 
 const router = require('express').Router();
 
@@ -13,10 +7,24 @@ const router = require('express').Router();
 router.post('/create', async function registerRoute(req, res) {
     try {
         const consumerTicket = new ConsumerTicket(req.body, true);
-        consumerTicket.save();
-        res.status(201).send({ consumerTicket });
+        await consumerTicket.save();
+
+        User.findOneAndUpdate(
+            { _id: consumerTicket.creator },
+            { $push: { outstandingConsumerTickets: consumerTicket._id } },
+            {},
+            (error, updatedUser) => {
+                if (error)
+                    return res.status(400).send({
+                        error:
+                            "Couldn't update outstanding tickets for user " +
+                            consumerTicket.creator,
+                    });
+                return res.status(200).send({ consumerTicket });
+            }
+        );
     } catch (error) {
-        res.status(400).send({ error: error.message });
+        res.status(400).send({ error: 'Failed to create new ConsumerTicket' });
     }
 });
 
@@ -41,9 +49,42 @@ router.delete('/delete/:ticketID', async function registerRoute(req, res) {
 
     ConsumerTicket.findOneAndDelete(
         { _id: ticketID },
+        {},
         (error, consumerTicket) => {
-            if (error) return res.status(400).send({ error });
-            return res.status(200).send({ consumerTicket });
+            if (error || !consumerTicket)
+                return res.status(400).send({
+                    error:
+                        error ??
+                        'Could not find a consumer ticket with a matching ID',
+                });
+
+            User.findOne({ _id: consumerTicket.creator }).exec(
+                (error, user) => {
+                    if (error || !user)
+                        return res.status(400).send({
+                            error:
+                                "Couldn't find creator of deleted ticket " +
+                                consumerTicket.creator,
+                        });
+
+                    const outTix = user.outstandingConsumerTickets;
+                    const index = outTix.indexOf(consumerTicket._id.toString());
+                    if (index != -1) outTix.splice(index, 1);
+
+                    user.save()
+                        .then(() => {
+                            return res.status(200).send({ consumerTicket });
+                        })
+                        .catch((err) => {
+                            if (error)
+                                return res.status(400).send({
+                                    error:
+                                        "Couldn't save updated user " +
+                                        user._id,
+                                });
+                        });
+                }
+            );
         }
     );
 });
