@@ -1,10 +1,8 @@
-import { Types } from 'mongoose';
 import ConsumerTicket from '../models/ConsumerTicket';
 import ProducerTicket from '../models/ProducerTicket';
-import User from '../models/User';
+import User, { IUser } from '../models/User';
 const router = require('express').Router();
 
-// Registration route
 router.post('/register', async function registerRoute(req, res) {
     try {
         const user = new User(req.body, true);
@@ -16,7 +14,6 @@ router.post('/register', async function registerRoute(req, res) {
     }
 });
 
-// Login Route
 router.post('/login', async function loginRoute(req, res) {
     try {
         const { email, password } = req.body;
@@ -39,7 +36,6 @@ router.post('/login', async function loginRoute(req, res) {
                 .send({ error: 'Email and password must be strings' });
         }
 
-        // Guaranteed to be defined if the method finishes without throwing
         const user = await User.findByCredentials(email, password);
         res.status(200).send({ user });
     } catch (error) {
@@ -48,8 +44,6 @@ router.post('/login', async function loginRoute(req, res) {
     }
 });
 
-// Mongoose rather than MongoDB for documentation help
-// Edit routes
 router.post('/edit', async function editRoute(req, res) {
     const id = req.body._id;
     User.updateOne(
@@ -80,27 +74,56 @@ router.delete('/delete/:userID', async function deleteRoute(req, res) {
         });
 });
 
-router.get('/tickets/:userID', async function getTickets(req, res) {
-    User.findById(req.params.userID)
-        .then(async (user) => {
-            if (!user)
-                return res.status(404).send({ error: 'User does not exist' });
-
-            const consumerIDs = user.outstandingConsumerTickets;
-            const producerIDs = user.outstandingProducerTickets;
-
-            const consumerTickets = await ConsumerTicket.find({
-                _id: { $in: consumerIDs },
-            });
-            const producerTickets = await ProducerTicket.find({
-                _id: { $in: producerIDs },
-            });
-
-            return res.status(200).send({ consumerTickets, producerTickets });
-        })
-        .catch((err) => {
-            return res.status(404).send({ error: 'User does not exist' });
-        });
+router.get('/:userID', async function getTickets(req, res) {
+    const user = await getUserByID(req.params.userID);
+    return user
+        ? res.status(200).send({ user })
+        : res.status(404).send({ error: 'User does not exist' });
 });
+
+// Get all outstanding tickets
+router.get('/outstanding/:userID', async function getTickets(req, res) {
+    const user = await getUserByID(req.params.userID);
+    if (!user) return res.status(404).send({ error: 'User does not exist' });
+
+    const consumerIDs = user.outstandingConsumerTickets;
+    const producerIDs = user.outstandingProducerTickets;
+
+    const consumerTickets = await ConsumerTicket.find({
+        _id: { $in: consumerIDs },
+    });
+    const producerTickets = await ProducerTicket.find({
+        _id: { $in: producerIDs },
+    });
+
+    return res.status(200).send({ consumerTickets, producerTickets });
+});
+
+// Get all accepted tickets
+router.get('/accepted/:userID', async function getTickets(req, res) {
+    const user = await getUserByID(req.params.userID);
+    if (!user) return res.status(404).send({ error: 'User does not exist' });
+
+    const ticketIDs = user.acceptedTickets;
+
+    const consumerTickets = await ConsumerTicket.find({
+        _id: { $in: ticketIDs },
+    });
+    const producerTickets = await ProducerTicket.find({
+        _id: { $in: ticketIDs },
+    });
+
+    return res
+        .status(200)
+        .send({ accepted: [...consumerTickets, ...producerTickets] });
+});
+
+async function getUserByID(id: string): Promise<IUser> {
+    try {
+        return await User.findById(id);
+    } catch (err) {
+        return null;
+    }
+}
 
 export default router;

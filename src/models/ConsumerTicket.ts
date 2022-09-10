@@ -7,6 +7,7 @@ export interface IConsumerTicket {
     foodInterests: string[]; // from constant list
     dietaryRestrictions: string[]; // from constant list
     peopleSetting: string; // "group" or "individual"
+    filled: boolean;
 }
 
 const consumerTicketSchema = new Schema<IConsumerTicket>({
@@ -27,6 +28,10 @@ const consumerTicketSchema = new Schema<IConsumerTicket>({
     peopleSetting: {
         type: String,
         required: true,
+    },
+    filled: {
+        type: Boolean,
+        default: false,
     },
 });
 

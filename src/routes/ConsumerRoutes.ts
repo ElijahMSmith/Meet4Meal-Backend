@@ -1,5 +1,5 @@
-import ConsumerTicket from '../models/ConsumerTicket';
-import User from '../models/User';
+import ConsumerTicket, { IConsumerTicket } from '../models/ConsumerTicket';
+import User, { IUser } from '../models/User';
 
 const router = require('express').Router();
 
@@ -87,6 +87,103 @@ router.delete('/delete/:ticketID', async function registerRoute(req, res) {
             );
         }
     );
+});
+
+router.get('/:ticketID', async function getTickets(req, res) {
+    const ticket = await getConsumerTicketByID(req.params.ticketID);
+    return ticket
+        ? res.status(200).send({ ticket })
+        : res.status(404).send({ error: 'Ticket does not exist' });
+});
+
+async function getConsumerTicketByID(id: string): Promise<IConsumerTicket> {
+    try {
+        return await ConsumerTicket.findById(id);
+    } catch (err) {
+        return null;
+    }
+}
+
+router.post('/accept', async (req, res) => {
+    const userID = req.body.userID;
+    const ticketID = req.body.ticketID;
+
+    try {
+        const user = await User.findById(userID);
+        const ticket = await ConsumerTicket.findById(ticketID);
+        const creatorUser = await User.findById(ticket.creator);
+
+        if (ticket.creator === userID)
+            return res
+                .status(400)
+                .send({ error: 'Cannot reject or accept your own ticket' });
+
+        if (user.acceptedTickets.includes(ticketID))
+            return res
+                .status(400)
+                .send({ error: 'Ticket was already accepted' });
+
+        user.acceptedTickets.push(ticketID);
+        if (!user.previousConnections.includes(ticket.creator)) {
+            user.previousConnections.push(ticket.creator);
+            creatorUser.previousConnections.push(userID);
+        }
+
+        await user.save();
+
+        if (!creatorUser.acceptedTickets.includes(ticketID))
+            creatorUser.acceptedTickets.push(ticketID);
+
+        const index = creatorUser.outstandingConsumerTickets.indexOf(ticketID);
+        if (index !== -1)
+            creatorUser.outstandingConsumerTickets.splice(index, 1);
+
+        await creatorUser.save();
+
+        ticket.filled = true;
+        await ticket.save();
+
+        return res.status(200).send({ creatorUser });
+    } catch (err) {
+        console.error(err);
+        return res.status(400).send({ error: 'Error accepting ticket' });
+    }
+});
+
+router.post('/reject', async (req, res) => {
+    const userID = req.body.userID;
+    const ticketID = req.body.ticketID;
+
+    try {
+        const user = await User.findById(userID);
+        const ticket = await ConsumerTicket.findById(ticketID);
+        const creatorUser = await User.findById(ticket.creator);
+
+        if(ticket.creator === userID) return res.status(400).send({error: "Cannot reject or accept your own ticket"})
+
+        let index = user.acceptedTickets.indexOf(ticketID);
+        if (index === -1)
+            return res
+                .status(400)
+                .send({ error: 'Ticket was not previously accepted' });
+        user.acceptedTickets.splice(index, 1);
+        await user.save();
+
+        index = creatorUser.acceptedTickets.indexOf(ticketID);
+        if (index !== -1) creatorUser.acceptedTickets.splice(index, 1);
+
+        creatorUser.outstandingConsumerTickets.push(ticketID);
+
+        await creatorUser.save();
+
+        ticket.filled = false;
+        await ticket.save();
+
+        return res.status(200).send();
+    } catch (err) {
+        console.error(err);
+        return res.status(400).send({ error: 'Error rejecting ticket' });
+    }
 });
 
 export default router;

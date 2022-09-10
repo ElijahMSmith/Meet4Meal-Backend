@@ -9,6 +9,7 @@ export interface IProducerTicket {
     serves: number; // > 0
     numberAccepted: number;
     acceptedUsers: string[]; // list of _id for each user
+    filled: boolean;
 }
 
 const producerTicketSchema = new Schema<IProducerTicket>({
@@ -44,6 +45,10 @@ const producerTicketSchema = new Schema<IProducerTicket>({
         default: 0,
     },
     acceptedUsers: [String],
+    filled: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const ProducerTicket = model<IProducerTicket>(
