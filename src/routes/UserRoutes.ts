@@ -138,16 +138,23 @@ router.get('/getQueue/:userID', async function getQueue(req, res) {
     const user = await User.findById(userID);
     try {
         const user = await User.findById(userID);
-        const tickets = await ConsumerTicket.find({});
 
-        const topScores = []; // TICKETS_RETURNED at a time
-        const ticketQueue = [];
-        for (let i = 0; i < TICKETS_RETURNED; i++) topScores.push(-1);
+        let conTickets = await ConsumerTicket.find();
 
-        for (let t of tickets) {
+        let conScores = []; // TICKETS_RETURNED at a time
+        let conQueue = [];
+        for (let i = 0; i < TICKETS_RETURNED; i++) conScores.push(-1);
+
+        for (let t of conTickets) {
             if (t.filled) continue;
             if (t.creator === userID) continue;
             if (user.acceptedTickets.includes(t._id.toString())) continue;
+            if (
+                user.dietaryRestrictions.length !== 0 &&
+                compareTickets(user.dietaryRestrictions, t.dietaryRestrictions)
+                    .length !== user.dietaryRestrictions.length
+            )
+                continue;
 
             let score = 0;
 
@@ -174,21 +181,71 @@ router.get('/getQueue/:userID', async function getQueue(req, res) {
                 sharedFoodInterests.length + sharedDietaryRestrictions.length;
 
             for (let i = 0; i < TICKETS_RETURNED; i++) {
-                if (score > topScores[i]) {
+                if (score > conScores[i]) {
                     for (let j = TICKETS_RETURNED - 1; j >= i; j--) {
-                        topScores[j + 1] = topScores[j];
-                        ticketQueue[j + 1] = ticketQueue[j];
+                        conScores[j + 1] = conScores[j];
+                        conQueue[j + 1] = conQueue[j];
                     }
 
-                    topScores[i] = score;
-                    ticketQueue[i] = t;
+                    conScores[i] = score;
+                    conQueue[i] = t;
 
                     break;
                 }
             }
         }
+        let consumerTickets = { conScores, conQueue };
 
-        return res.status(200).send({ ticketQueue, topScores });
+        let prodTickets = await ProducerTicket.find();
+        let prodScores = []; // TICKETS_RETURNED at a time
+        let prodQueue = [];
+        for (let i = 0; i < TICKETS_RETURNED; i++) prodScores.push(-1);
+
+        for (let t of prodTickets) {
+            if (t.filled) continue;
+            if (t.creator === userID) continue;
+            if (user.acceptedTickets.includes(t._id.toString())) continue;
+            if (
+                user.dietaryRestrictions.length !== 0 &&
+                compareTickets(user.dietaryRestrictions, t.dietaryRestrictions)
+                    .length !== user.dietaryRestrictions.length
+            )
+                continue;
+
+            let score = 0;
+
+            if (user.location === t.location) score++;
+            if (
+                new Date().getTime() - 1000 * 60 * 60 * 24 * 7 <=
+                new Date(t.creationDate).getTime()
+            )
+                score++;
+
+            const creator = await User.findById(t.creator);
+            if (Math.abs(creator.age - user.age) < 10) score++;
+
+            const sharedFoodInterests = compareTickets(
+                t.foodKind,
+                user.foodInterests
+            );
+            score += sharedFoodInterests.length;
+
+            for (let i = 0; i < TICKETS_RETURNED; i++) {
+                if (score > prodScores[i]) {
+                    for (let j = TICKETS_RETURNED - 1; j >= i; j--) {
+                        prodScores[j + 1] = prodScores[j];
+                        prodQueue[j + 1] = prodQueue[j];
+                    }
+
+                    prodScores[i] = score;
+                    prodQueue[i] = t;
+
+                    break;
+                }
+            }
+        }
+        let producerTickets = { prodScores, prodQueue };
+        return res.status(200).send({ consumerTickets, producerTickets });
     } catch (err) {
         return res.status(404).send({ error: err });
     }

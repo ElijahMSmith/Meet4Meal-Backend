@@ -6,6 +6,7 @@ export interface IProducerTicket {
     location: string; // zipcode
     foodKind: string[]; // from constant list
     itemDescription: string;
+    dietaryRestrictions: string[];
     serves: number; // > 0
     numberAccepted: number;
     acceptedUsers: string[]; // list of _id for each user
@@ -33,6 +34,7 @@ const producerTicketSchema = new Schema<IProducerTicket>({
         type: String,
         default: '',
     },
+    dietaryRestrictions: [String],
     serves: {
         type: Number,
         required: true,
