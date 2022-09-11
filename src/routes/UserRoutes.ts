@@ -1,3 +1,4 @@
+import { getEffectiveConstraintOfTypeParameter } from 'typescript';
 import ConsumerTicket from '../models/ConsumerTicket';
 import ProducerTicket from '../models/ProducerTicket';
 import User, { IUser } from '../models/User';
@@ -123,5 +124,38 @@ async function getUserByID(id: string): Promise<IUser> {
         return null;
     }
 }
+
+router.get('/getQueue/:userID', async function getQueue(req, res) {
+    const userID = req.params.userID;
+    const user = await User.findById(userID);
+    try {
+        const user = await User.findById(userID);
+        const tickets = await ConsumerTicket.find({});
+        for (let t of tickets) {
+            const creator = t.creator;
+            const location = t.location;
+            const creationDate = t.creationDate;
+            const foodInterests = t.foodInterests;
+            const dietaryRestrictions = t.dietaryRestrictions;
+            const peopleSetting = t.peopleSetting;
+            const filled = t.filled;
+        }
+        //compare strings, calculate score, put things into an array
+        function compareTickets<T>(a: T[], b: T[]): T[] {
+            return a.filter((element) => {
+                return !b.includes(element);
+            });
+        }
+        let score = 0;
+        if (diff >= 1) compare + 1;
+        const diff = {
+            ...compareTickets(foodInterests),
+            ...compareTickets(foodInterests),
+        };
+        console.log(diff);
+    } catch (err) {
+        return res.status(404).send({ error: err });
+    }
+});
 
 export default router;
