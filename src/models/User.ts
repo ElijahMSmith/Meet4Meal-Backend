@@ -5,6 +5,8 @@ import bcrypt = require('bcryptjs');
 export interface IUser {
     email: string;
     password: string;
+    age: number;
+    location: string; // zip
     firstName: string;
     lastName: string;
     pronouns: string;
@@ -37,6 +39,14 @@ const userSchema = new Schema<IUser, UserModel>({
         type: String,
         required: true,
         minLength: 7,
+    },
+    age: {
+        type: Number,
+        required: true,
+    },
+    location: {
+        type: String,
+        required: true,
     },
     firstName: {
         type: String,
