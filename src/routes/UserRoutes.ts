@@ -143,7 +143,10 @@ router.get('/getQueue/:userID', async function getQueue(req, res) {
 
         let conScores = []; // TICKETS_RETURNED at a time
         let conQueue = [];
-        for (let i = 0; i < TICKETS_RETURNED; i++) conScores.push(-1);
+        for (let i = 0; i < TICKETS_RETURNED; i++) {
+            conScores.push(-1);
+            conQueue.push(null);
+        }
 
         for (let t of conTickets) {
             if (t.filled) continue;
@@ -199,7 +202,10 @@ router.get('/getQueue/:userID', async function getQueue(req, res) {
         let prodTickets = await ProducerTicket.find();
         let prodScores = []; // TICKETS_RETURNED at a time
         let prodQueue = [];
-        for (let i = 0; i < TICKETS_RETURNED; i++) prodScores.push(-1);
+        for (let i = 0; i < TICKETS_RETURNED; i++) {
+            prodScores.push(-1);
+            prodQueue.push(null);
+        }
 
         for (let t of prodTickets) {
             if (t.filled) continue;
