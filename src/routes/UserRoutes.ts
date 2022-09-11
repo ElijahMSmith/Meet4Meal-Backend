@@ -125,34 +125,70 @@ async function getUserByID(id: string): Promise<IUser> {
     }
 }
 
+// Return all the items that are shared in both
+function compareTickets<T>(a: T[], b: T[]): T[] {
+    return a.filter((element) => {
+        return b.includes(element);
+    });
+}
+
 router.get('/getQueue/:userID', async function getQueue(req, res) {
+    const TICKETS_RETURNED = 20;
     const userID = req.params.userID;
     const user = await User.findById(userID);
     try {
         const user = await User.findById(userID);
         const tickets = await ConsumerTicket.find({});
+
+        const topScores = []; // TICKETS_RETURNED at a time
+        const ticketQueue = [];
+        for (let i = 0; i < TICKETS_RETURNED; i++) topScores.push(-1);
+
         for (let t of tickets) {
-            const creator = t.creator;
-            const location = t.location;
-            const creationDate = t.creationDate;
-            const foodInterests = t.foodInterests;
-            const dietaryRestrictions = t.dietaryRestrictions;
-            const peopleSetting = t.peopleSetting;
-            const filled = t.filled;
+            if (t.filled) continue;
+            if (t.creator === userID) continue;
+            if (user.acceptedTickets.includes(t._id.toString())) continue;
+
+            let score = 0;
+
+            if (user.location === t.location) score++;
+            if (
+                new Date().getTime() - 1000 * 60 * 60 * 24 * 7 <=
+                new Date(t.creationDate).getTime()
+            )
+                score++;
+
+            const creator = await User.findById(t.creator);
+            if (Math.abs(creator.age - user.age) < 10) score++;
+
+            const sharedFoodInterests = compareTickets(
+                t.foodInterests,
+                user.foodInterests
+            );
+            const sharedDietaryRestrictions = compareTickets(
+                t.dietaryRestrictions,
+                user.dietaryRestrictions
+            );
+
+            score +=
+                sharedFoodInterests.length + sharedDietaryRestrictions.length;
+
+            for (let i = 0; i < TICKETS_RETURNED; i++) {
+                if (score > topScores[i]) {
+                    for (let j = TICKETS_RETURNED - 1; j >= i; j--) {
+                        topScores[j + 1] = topScores[j];
+                        ticketQueue[j + 1] = ticketQueue[j];
+                    }
+
+                    topScores[i] = score;
+                    ticketQueue[i] = t;
+
+                    break;
+                }
+            }
         }
-        //compare strings, calculate score, put things into an array
-        function compareTickets<T>(a: T[], b: T[]): T[] {
-            return a.filter((element) => {
-                return !b.includes(element);
-            });
-        }
-        let score = 0;
-        if (diff >= 1) compare + 1;
-        const diff = {
-            ...compareTickets(foodInterests),
-            ...compareTickets(foodInterests),
-        };
-        console.log(diff);
+
+        return res.status(200).send({ ticketQueue, topScores });
     } catch (err) {
         return res.status(404).send({ error: err });
     }
